@@ -1,11 +1,12 @@
 # RAG_Engine
-## Overview
+## Motivation
+Found myself setting up the same retrieval process over and over again for different projects. Decided to spend an extra hour to set up a system that can be reused. 
 
-The `RAG_Engine` is a system designed for contextual retrieval of documents. It leverages OpenAI's language models and Pinecone's vector database to efficiently index and query documents.
+## What it does
+Contextual Retrieval (https://www.anthropic.com/news/contextual-retrieval) with prefix-caching in a fully parallelized way (both for indexing and querying)
 
 ## Initialization
-
-To use the `contextual_retriever` module, ensure you have the necessary environment variables set up for OpenAI and Pinecone API keys. You can do this by creating a `.env` file in your project directory with the following variables:
+Setup the environment variables by creating a `.env` file in your project directory with the following variables:
 
 - `OPENAI_API_KEY`: Your OpenAI API key.
 - `PINECONE_API_KEY`: Your Pinecone API key.
@@ -44,3 +45,6 @@ results = cr.query_pinecone_index(query)
 document_names = closest_matching_documents(query, top_k=3)
 ```
 
+
+### Credits
+Implementation is adapted from https://www.youtube.com/watch?v=6efwN_US-zk and https://github.com/akshgarg7/Specter. 
