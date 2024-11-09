@@ -1,4 +1,3 @@
-
 # Modified from tutorial on: https://www.youtube.com/watch?v=6efwN_US-zk
 import uuid
 import hashlib
@@ -26,6 +25,9 @@ openai_client = OpenAI(
 )
 
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+
+# Load the index name from the environment variables
+index_name = os.getenv("PINECONE_INDEX_NAME")
 
 def get_openai_embeddings(input_data):
     response = openai_client.embeddings.create(input=input_data, 
@@ -131,7 +133,7 @@ class ContextualRetrieval:
         }
         return {"id": id, "values": output, "metadata": metadata}
 
-    def create_pinecone_index(self, index_name: str, chunks: List[Document]):
+    def create_pinecone_index(self, chunks: List[Document]):
         """
         Create a Pinecone index for the given chunks.
         """
@@ -175,7 +177,7 @@ class ContextualRetrieval:
             for future in concurrent.futures.as_completed(futures):
                 pass # basically just wait for all the threads to finish
 
-    def query_pinecone_index(self, index_name: str, query: str, top_k: int = 3, include_values: bool = True, include_metadata: bool = True):
+    def query_pinecone_index(self, query: str, top_k: int = 3, include_values: bool = True, include_metadata: bool = True):
         """
         Query a Pinecone index.
         """
@@ -207,18 +209,22 @@ class ContextualRetrieval:
         response = self.llm.invoke(messages)
         return response.content
 
-def index_documents(): 
+def index_documents(documents: List[str]): 
+    """
+    Index a list of documents.
+    
+    :param documents: A list of document contents to be indexed.
+    """
     cr = ContextualRetrieval()
-    for file in os.listdir("precedents/"):
-        filename = "precedents/" + file
-        print(f"Indexing {filename}")
-        with open(filename, "r") as f:
-            original_chunks, contextualized_chunks = cr.process_document(f.read(), filename)
-            cr.create_pinecone_index("contextual-summary", contextualized_chunks)
+    for document_content in documents:
+        document_name = f"document_{hashlib.md5(document_content.encode()).hexdigest()}"
+        print(f"Indexing {document_name}")
+        original_chunks, contextualized_chunks = cr.process_document(document_content, document_name)
+        cr.create_pinecone_index(contextualized_chunks)
 
 def closest_matching_documents(query: str, top_k: int = 3): 
     cr = ContextualRetrieval()
-    results = cr.query_pinecone_index("contextual-summary", query, top_k=top_k*30, include_values=False, include_metadata=True)
+    results = cr.query_pinecone_index(query, top_k=top_k*30, include_values=False, include_metadata=True)
     document_names = set()
     for result in results: 
         document_names.add(result.metadata["document_name"])
@@ -228,5 +234,6 @@ def closest_matching_documents(query: str, top_k: int = 3):
 
 
 if __name__ == "__main__":
-    index_documents() 
+    index_documents(["What is the capital of France?", "What is the capital of Germany?"]) 
+    breakpoint()
     print(closest_matching_documents("What is the capital of France?"))
