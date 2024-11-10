@@ -209,15 +209,20 @@ class ContextualRetrieval:
         response = self.llm.invoke(messages)
         return response.content
 
-def index_documents(documents: List[str]): 
+def index_documents(documents: List[str], document_names: List[str] = None):
     """
     Index a list of documents.
-    
+
     :param documents: A list of document contents to be indexed.
     """
     cr = ContextualRetrieval()
-    for document_content in documents:
-        document_name = f"document_{hashlib.md5(document_content.encode()).hexdigest()}"
+
+    assert len(documents) == len(document_names) if document_names else True, "document_names must be provided if documents are provided"
+    print(f"Indexing {len(documents)} documents")
+
+
+    for i, document_content in enumerate(documents):
+        document_name = document_names[i] if document_names else f"document_{hashlib.md5(document_content.encode()).hexdigest()}"
         print(f"Indexing {document_name}")
         original_chunks, contextualized_chunks = cr.process_document(document_content, document_name)
         cr.create_pinecone_index(contextualized_chunks)
