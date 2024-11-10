@@ -235,5 +235,4 @@ def closest_matching_documents(query: str, top_k: int = 3):
 
 if __name__ == "__main__":
     index_documents(["What is the capital of France?", "What is the capital of Germany?"]) 
-    breakpoint()
     print(closest_matching_documents("What is the capital of France?"))
